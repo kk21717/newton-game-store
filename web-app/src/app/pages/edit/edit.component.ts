@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { VideoGame } from '../../models/video-game.model';
+import { VideoGame, UpdateVideoGameRequest } from '../../models/video-game.model';
+import { VideoGameService } from '../../services/video-game.service';
 
 @Component({
   selector: 'app-edit',
@@ -12,73 +13,41 @@ import { VideoGame } from '../../models/video-game.model';
   templateUrl: './edit.component.html',
   styleUrl: './edit.component.css'
 })
-export class EditComponent {
-  videoGames: VideoGame[] = [
-    {
-      id: 1,
-      title: 'The Legend of Zelda: Tears of the Kingdom',
-      genre: 'Action-Adventure',
-      platform: 'Nintendo Switch',
-      releaseYear: 2023,
-      price: 69.99,
-      description: 'An epic adventure awaits in this sequel to Breath of the Wild.',
-      imageUrl: 'https://placehold.co/400x300/1a472a/ffffff?text=Zelda+TOTK'
-    },
-    {
-      id: 2,
-      title: 'God of War Ragnarök',
-      genre: 'Action-Adventure',
-      platform: 'PlayStation 5',
-      releaseYear: 2022,
-      price: 59.99,
-      description: 'Kratos and Atreus embark on an epic journey through the Nine Realms.',
-      imageUrl: 'https://placehold.co/400x300/2d3436/ffffff?text=God+of+War'
-    },
-    {
-      id: 3,
-      title: 'Elden Ring',
-      genre: 'Action RPG',
-      platform: 'Multi-platform',
-      releaseYear: 2022,
-      price: 59.99,
-      description: 'A dark fantasy action RPG created by FromSoftware and George R.R. Martin.',
-      imageUrl: 'https://placehold.co/400x300/4a4a4a/ffffff?text=Elden+Ring'
-    },
-    {
-      id: 4,
-      title: 'Hogwarts Legacy',
-      genre: 'Action RPG',
-      platform: 'Multi-platform',
-      releaseYear: 2023,
-      price: 59.99,
-      description: 'Experience the wizarding world in this open-world action RPG.',
-      imageUrl: 'https://placehold.co/400x300/5d4e37/ffffff?text=Hogwarts'
-    },
-    {
-      id: 5,
-      title: 'Spider-Man 2',
-      genre: 'Action-Adventure',
-      platform: 'PlayStation 5',
-      releaseYear: 2023,
-      price: 69.99,
-      description: 'Swing through New York as both Peter Parker and Miles Morales.',
-      imageUrl: 'https://placehold.co/400x300/c0392b/ffffff?text=Spider-Man+2'
-    },
-    {
-      id: 6,
-      title: 'Starfield',
-      genre: 'Action RPG',
-      platform: 'Xbox/PC',
-      releaseYear: 2023,
-      price: 69.99,
-      description: 'Explore the vastness of space in Bethesda\'s new sci-fi RPG.',
-      imageUrl: 'https://placehold.co/400x300/1e3799/ffffff?text=Starfield'
-    }
-  ];
-
+export class EditComponent implements OnInit {
+  videoGames: VideoGame[] = [];
   selectedGame: VideoGame | null = null;
+  loading = true;
+  saving = false;
+  error: string | null = null;
 
-  constructor(private modalService: NgbModal) {}
+  constructor(
+    private modalService: NgbModal,
+    private videoGameService: VideoGameService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadVideoGames();
+  }
+
+  loadVideoGames(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.videoGameService.getAll().subscribe({
+      next: (games) => {
+        this.videoGames = games;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading video games:', err);
+        this.error = 'Failed to load video games. Please make sure the API server is running.';
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   openEditModal(content: any, game: VideoGame): void {
     this.selectedGame = { ...game };
@@ -86,16 +55,52 @@ export class EditComponent {
   }
 
   saveChanges(modal: any): void {
-    if (this.selectedGame) {
-      const index = this.videoGames.findIndex(g => g.id === this.selectedGame!.id);
-      if (index !== -1) {
-        this.videoGames[index] = { ...this.selectedGame };
+    if (!this.selectedGame) return;
+
+    this.saving = true;
+    const updateRequest: UpdateVideoGameRequest = {
+      title: this.selectedGame.title,
+      genre: this.selectedGame.genre,
+      platform: this.selectedGame.platform,
+      releaseYear: this.selectedGame.releaseYear,
+      price: this.selectedGame.price,
+      description: this.selectedGame.description,
+      imageUrl: this.selectedGame.imageUrl
+    };
+
+    this.videoGameService.update(this.selectedGame.id, updateRequest).subscribe({
+      next: (updatedGame) => {
+        const index = this.videoGames.findIndex(g => g.id === updatedGame.id);
+        if (index !== -1) {
+          this.videoGames[index] = updatedGame;
+        }
+        this.saving = false;
+        modal.close();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error updating video game:', err);
+        this.saving = false;
+        this.cdr.detectChanges();
+        alert('Failed to update video game. Please try again.');
       }
-    }
-    modal.close();
+    });
   }
 
   deleteGame(id: number): void {
-    this.videoGames = this.videoGames.filter(g => g.id !== id);
+    if (!confirm('Are you sure you want to delete this video game?')) {
+      return;
+    }
+
+    this.videoGameService.delete(id).subscribe({
+      next: () => {
+        this.videoGames = this.videoGames.filter(g => g.id !== id);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error deleting video game:', err);
+        alert('Failed to delete video game. Please try again.');
+      }
+    });
   }
 }

@@ -6,26 +6,51 @@
     </a>
   </div>
 
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-    @for (game of videoGames; track game.id) {
-      <div class="col">
-        <div class="card h-100 shadow-sm">
-          <img [src]="game.imageUrl" class="card-img-top" [alt]="game.title">
-          <div class="card-body">
-            <h5 class="card-title">{{ game.title }}</h5>
-            <p class="card-text text-muted">{{ game.description }}</p>
-            <div class="d-flex flex-wrap gap-2 mb-2">
-              <span class="badge bg-primary">{{ game.genre }}</span>
-              <span class="badge bg-secondary">{{ game.platform }}</span>
-              <span class="badge bg-info">{{ game.releaseYear }}</span>
+  @if (loading) {
+    <div class="d-flex justify-content-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (error) {
+    <div class="alert alert-danger" role="alert">
+      {{ error }}
+      <button class="btn btn-sm btn-outline-danger ms-3" (click)="loadVideoGames()">
+        Retry
+      </button>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    @if (videoGames.length === 0) {
+      <div class="alert alert-info text-center">
+        No video games available. Add some games to get started!
+      </div>
+    } @else {
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @for (game of videoGames; track game.id) {
+          <div class="col">
+            <div class="card h-100 shadow-sm">
+              <img [src]="game.imageUrl" class="card-img-top" [alt]="game.title">
+              <div class="card-body">
+                <h5 class="card-title">{{ game.title }}</h5>
+                <p class="card-text text-muted">{{ game.description }}</p>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  <span class="badge bg-primary">{{ game.genre }}</span>
+                  <span class="badge bg-secondary">{{ game.platform }}</span>
+                  <span class="badge bg-info">{{ game.releaseYear }}</span>
+                </div>
+              </div>
+              <div class="card-footer d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-success">${{ game.price.toFixed(2) }}</span>
+                <button class="btn btn-outline-primary btn-sm">View Details</button>
+              </div>
             </div>
           </div>
-          <div class="card-footer d-flex justify-content-between align-items-center">
-            <span class="fw-bold text-success">\${{ game.price.toFixed(2) }}</span>
-            <button class="btn btn-outline-primary btn-sm">View Details</button>
-          </div>
-        </div>
+        }
       </div>
     }
-  </div>
+  }
 </div>
