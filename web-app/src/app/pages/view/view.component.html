@@ -1,0 +1,64 @@
+<div class="container">
+  <div class="mb-4">
+    <a routerLink="/browse" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Back to Catalogue
+    </a>
+  </div>
+
+  @if (loading) {
+    <div class="d-flex justify-content-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  }
+
+  @if (error) {
+    <div class="alert alert-danger" role="alert">
+      {{ error }}
+      <a routerLink="/browse" class="btn btn-sm btn-outline-danger ms-3">
+        Back to Catalogue
+      </a>
+    </div>
+  }
+
+  @if (!loading && !error && videoGame) {
+    <div class="row">
+      <div class="col-md-5">
+        <img
+          [src]="videoGame.imageUrl"
+          [alt]="videoGame.title"
+          class="img-fluid rounded shadow">
+      </div>
+      <div class="col-md-7">
+        <h1 class="mb-3">{{ videoGame.title }}</h1>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="badge bg-primary fs-6">{{ videoGame.genre }}</span>
+          <span class="badge bg-secondary fs-6">{{ videoGame.platform }}</span>
+          <span class="badge bg-info fs-6">{{ videoGame.releaseYear }}</span>
+        </div>
+
+        <h2 class="text-success mb-4">${{ videoGame.price.toFixed(2) }}</h2>
+
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="mb-0">Description</h5>
+          </div>
+          <div class="card-body">
+            <p class="card-text">{{ videoGame.description }}</p>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary btn-lg">
+            <i class="bi bi-cart-plus"></i> Add to Cart
+          </button>
+          <a [routerLink]="['/edit']" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-pencil"></i> Edit
+          </a>
+        </div>
+      </div>
+    </div>
+  }
+</div>

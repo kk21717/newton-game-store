@@ -24,13 +24,14 @@ builder.Services.AddCors(options =>
 // Register application and infrastructure services
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-if (string.IsNullOrEmpty(connectionString) || builder.Environment.IsDevelopment())
+if (string.IsNullOrEmpty(connectionString))
 {
-    // Use In-Memory database for development/demo purposes
+    // Use In-Memory database when no connection string is configured
     builder.Services.AddInfrastructureServicesWithInMemory();
 }
 else
 {
+    // Use SQL Server with the configured connection string
     builder.Services.AddInfrastructureServices(connectionString);
 }
 
@@ -56,10 +57,11 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 app.MapControllers();
 
-// Seed the database with initial data
+// Ensure database is created and seed with initial data
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await context.Database.EnsureCreatedAsync();
     await DataSeeder.SeedAsync(context);
 }
 
