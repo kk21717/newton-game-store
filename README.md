@@ -95,7 +95,7 @@ The app opens at `http://localhost:4200`.
 
 ## Screenshots
 
-View the [Demo Gallery](demo/index.html) for frontend screenshots.
+View the [Demo Gallery](https://htmlpreview.github.io/?https://github.com/kk21717/newton-game-store/blob/master/demo/index.html) for frontend screenshots.
 
 ## API Endpoints
 
